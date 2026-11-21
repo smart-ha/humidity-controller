@@ -1,0 +1,15 @@
+{
+  "domain": "humidity_controller",
+  "name": "Humidity Controller",
+  "codeowners": [
+    "@smart-ha"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/smart-ha/humidity-controller",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/smart-ha/humidity-controller/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

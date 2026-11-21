@@ -1,0 +1,180 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Humidity Controller",
+        "description": "One entry is one zone: a humidifier entity that keeps the humidity measured by your sensors by driving the selected devices. Device methods, presets and the failsafe are set afterwards under Configure.",
+        "data": {
+          "name": "Zone name",
+          "humidity_sensors": "Humidity sensors (one or more)",
+          "humidity_aggregation": "How to combine several sensors",
+          "devices": "Devices (humidifier / switch / input_boolean)"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Humidity Controller",
+        "description": "Pick what to configure. Changes are saved only by «Save & exit».",
+        "menu_options": {
+          "sensors": "Sensors & failsafe",
+          "devices": "Devices",
+          "regulation": "Hysteresis & on/off timing",
+          "presets": "Presets & schedules",
+          "finish": "Save & exit"
+        }
+      },
+      "sensors": {
+        "title": "Sensors & failsafe",
+        "description": "Unavailable sensors are skipped; a tick is skipped only when all of them are out. If no sensor has a reading for longer than the timeout, the devices go to the failsafe state.",
+        "data": {
+          "name": "Zone name",
+          "humidity_sensors": "Humidity sensors (one or more)",
+          "humidity_aggregation": "How to combine several sensors",
+          "sensor_timeout_minutes": "Failsafe after no readings for (minutes)",
+          "failsafe_action": "Failsafe",
+          "_back": "← Cancel (don't save changes on this screen)"
+        }
+      },
+      "regulation": {
+        "title": "Hysteresis & on/off timing",
+        "description": "For the «fan speed» and «on/off» methods: humidifying starts at target − hysteresis and stops at the target. A device is not switched again before the minimum on / off time has passed.",
+        "data": {
+          "hysteresis": "Hysteresis (%RH)",
+          "min_on_minutes": "Minimum on time (minutes)",
+          "min_off_minutes": "Minimum off time (minutes)",
+          "_back": "← Cancel (don't save changes on this screen)"
+        }
+      },
+      "devices": {
+        "title": "Devices",
+        "description": "{summary}\n\nPick a humidifier to set its method. Switches and input_booleans are always driven on/off.",
+        "menu_options": {
+          "device_list": "Add / remove devices",
+          "init": "← Back"
+        }
+      },
+      "device_list": {
+        "title": "Add / remove devices",
+        "data": {
+          "devices": "Devices (humidifier / switch / input_boolean)",
+          "_back": "← Cancel (don't save changes on this screen)"
+        }
+      },
+      "device": {
+        "title": "Device settings",
+        "description": "{device}\n\n• Setpoint — the device stays in its own «auto» mode and gets the target shifted by (its own reading − the zone reading), limited to ± max correction.\n• Fan speed — the device is put into «manual»; the fan speed follows the humidity deficit (PI), the device is switched off at the target. Needs the speed entity.\n• On/off — hysteresis only.\nIf the device lacks the mode a method needs (or the speed entity is missing), it falls back to on/off.",
+        "data": {
+          "method": "Method",
+          "max_delta": "Max setpoint correction (%RH)",
+          "speed_entity": "Fan speed entity (for «Fan speed»)",
+          "speed_min": "Minimum fan speed (%)",
+          "speed_max": "Maximum fan speed (%)",
+          "kp": "Kp (% fan per %RH of deficit)",
+          "ki": "Ki (% fan per %RH·minute)",
+          "_back": "← Cancel (don't save changes on this screen)"
+        }
+      },
+      "presets": {
+        "title": "Presets & schedules",
+        "description": "Presets are the entity's modes. Each has a default humidity and an optional time-of-day schedule (linear between points, over midnight). Setting the humidity by hand switches the mode to «none»."
+      },
+      "preset_new": {
+        "title": "New preset",
+        "data": {
+          "name": "Name (shown as the mode)",
+          "humidity": "Default humidity (%)",
+          "_back": "← Cancel (don't add)"
+        }
+      },
+      "preset": {
+        "title": "Preset {preset}",
+        "description": "Default: {humidity} %\nSchedule:\n{summary}",
+        "menu_options": {
+          "preset_edit": "Name & default humidity",
+          "preset_point_add": "Add schedule point",
+          "preset_bulk": "Edit schedule",
+          "preset_delete": "Delete preset",
+          "presets": "← Back"
+        }
+      },
+      "preset_edit": {
+        "title": "Preset {preset}",
+        "data": {
+          "name": "Name",
+          "humidity": "Default humidity (%)",
+          "_back": "← Cancel (don't save changes on this screen)"
+        }
+      },
+      "preset_point_add": {
+        "title": "Add point to {preset}",
+        "data": {
+          "time": "Time",
+          "humidity": "Humidity (%)",
+          "_back": "← Cancel (don't add this point)"
+        }
+      },
+      "preset_bulk": {
+        "title": "Schedule of {preset}",
+        "description": "Edit any row, or tick its delete box. Empty schedule = the default humidity.",
+        "data": {
+          "_back": "← Cancel (discard all changes on this screen)"
+        }
+      },
+      "preset_delete": {
+        "title": "Delete preset {preset}",
+        "data": {
+          "confirm": "Yes, delete it",
+          "_back": "← Cancel"
+        }
+      }
+    },
+    "error": {
+      "speed_range": "Maximum speed must not be below the minimum",
+      "invalid_name": "Enter a name (and not «none»)",
+      "duplicate_name": "A preset with this name already exists",
+      "invalid_time": "Invalid time"
+    }
+  },
+  "selector": {
+    "humidity_aggregation": {
+      "options": {
+        "mean": "Average of all sensors",
+        "min": "Minimum — humidify until the driest spot is satisfied",
+        "max": "Maximum — stop when the dampest spot is satisfied",
+        "median": "Median — ignores a single outlying sensor"
+      }
+    },
+    "failsafe_action": {
+      "options": {
+        "off": "Turn the devices off",
+        "device_auto": "Hand humidifiers their own auto mode with the target (switches off)"
+      }
+    },
+    "method": {
+      "options": {
+        "setpoint": "Setpoint (device in auto, corrected target)",
+        "speed": "Fan speed (device in manual, PI)",
+        "onoff": "On/off by hysteresis"
+      }
+    }
+  },
+  "entity": {
+    "humidifier": {
+      "controller": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "none": "No preset",
+              "normal": "Normal",
+              "sleep": "Sleep",
+              "away": "Away"
+            }
+          }
+        }
+      }
+    }
+  }
+}

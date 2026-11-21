@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.DS_Store
+.idea/
+.vscode/
+
+# Local deploy credentials (HA token) — never commit, repo is public
+.deploy.env
+
+# Local Claude Code state
+.claude/

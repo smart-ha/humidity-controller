@@ -1,0 +1,23 @@
+{
+  "entity": {
+    "humidifier": {
+      "controller": {
+        "default": "mdi:air-humidifier",
+        "state": {
+          "off": "mdi:air-humidifier-off"
+        },
+        "state_attributes": {
+          "mode": {
+            "default": "mdi:tune-variant",
+            "state": {
+              "none": "mdi:hand-back-right",
+              "normal": "mdi:home",
+              "sleep": "mdi:power-sleep",
+              "away": "mdi:account-arrow-right"
+            }
+          }
+        }
+      }
+    }
+  }
+}
