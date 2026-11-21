@@ -1,0 +1,42 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Ежедневно — ловит изменения требований HACS/hassfest, даже когда в репо тихо.
+    - cron: "0 0 * * *"
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install pytest
+      - run: python -m py_compile custom_components/humidity_controller/*.py
+      - run: python -m pytest -q
+      - name: strings.json и translations/en.json совпадают
+        run: diff custom_components/humidity_controller/strings.json custom_components/humidity_controller/translations/en.json
+
+  hacs:
+    name: HACS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration
+          # Кастомный репозиторий (не в home-assistant/brands) — пропускаем
+          # проверку brand-ассетов. Остальные проверки HACS остаются.
+          ignore: brands
+
+  hassfest:
+    name: Hassfest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
