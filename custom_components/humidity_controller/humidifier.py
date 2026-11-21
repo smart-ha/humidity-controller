@@ -371,7 +371,10 @@ class HumidityControllerEntity(HumidifierEntity, RestoreEntity):
 
         if measured is None:
             if now - self._last_reading_ts < self._timeout_s:
-                # Transient gap: keep the devices and the UI as they are.
+                # Transient gap: keep the devices and the UI as they are —
+                # except a just-switched-on entity, which is not "off".
+                if self._action == HumidifierAction.OFF:
+                    self._action = HumidifierAction.IDLE
                 return
             if not self._failsafe:
                 _LOGGER.warning(
