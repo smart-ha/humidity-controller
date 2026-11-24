@@ -32,20 +32,25 @@ HUMIDITY_AGGREGATIONS = (
 DEFAULT_AGGREGATION = AGGREGATION_MEAN
 
 # --- Control methods per device -------------------------------------------
+# speed    — humidifier.* in ``manual``; the fan speed (number.*) follows the
+#            humidity deficit through a PI regulator, the device is switched
+#            off when the target is reached. The default: the controller
+#            decides how hard the device works, not the device itself.
 # setpoint — humidifier.* stays in its own ``auto`` mode and is handed the
 #            target, shifted by (device's own reading − our reading), so it
 #            regulates by itself but against *our* sensors.
-# speed    — humidifier.* in ``manual``; the fan speed (number.*) follows the
-#            humidity deficit through a PI regulator, the device is switched
-#            off when the target is reached.
 # onoff    — plain on/off by hysteresis with minimum on/off times. The only
 #            method for switch / input_boolean, and the fallback for a
 #            humidifier.* that lacks the mode / speed entity its method needs.
 METHOD_SETPOINT = "setpoint"
 METHOD_SPEED = "speed"
 METHOD_ONOFF = "onoff"
-HUMIDIFIER_METHODS = (METHOD_SETPOINT, METHOD_SPEED, METHOD_ONOFF)
-DEFAULT_METHOD = METHOD_SETPOINT
+HUMIDIFIER_METHODS = (METHOD_SPEED, METHOD_SETPOINT, METHOD_ONOFF)
+DEFAULT_METHOD = METHOD_SPEED
+
+# Config entry minor version. 2: humidifiers left on the old default
+# (setpoint) were moved to speed.
+ENTRY_MINOR_VERSION = 2
 
 # Humidifier modes the methods rely on (airmx / Tion Iris naming).
 DEVICE_MODE_AUTO = "auto"

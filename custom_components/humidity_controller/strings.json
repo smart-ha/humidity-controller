@@ -65,11 +65,11 @@
       },
       "device": {
         "title": "Device settings",
-        "description": "{device}\n\n• Setpoint — the device stays in its own «auto» mode and gets the target shifted by (its own reading − the zone reading), limited to ± max correction.\n• Fan speed — the device is put into «manual»; the fan speed follows the humidity deficit (PI), the device is switched off at the target. Needs the speed entity.\n• On/off — hysteresis only.\nIf the device lacks the mode a method needs (or the speed entity is missing), it falls back to on/off.",
+        "description": "{device}\n\n• Fan speed (default) — the controller sets how hard the device works: «manual» mode, the fan speed follows the humidity deficit (PI), the device is switched off at the target. The speed entity is taken from the same device (airmx: number.…_fan_speed) unless chosen below.\n• Setpoint — the device stays in its own «auto» mode and gets the target shifted by (its own reading − the zone reading), limited to ± max correction.\n• On/off — hysteresis only.\nIf the device lacks the mode a method needs (or no speed entity is found), it falls back to on/off.",
         "data": {
           "method": "Method",
           "max_delta": "Max setpoint correction (%RH)",
-          "speed_entity": "Fan speed entity (for «Fan speed»)",
+          "speed_entity": "Fan speed entity (empty — found on the device)",
           "speed_min": "Minimum fan speed (%)",
           "speed_max": "Maximum fan speed (%)",
           "kp": "Kp (% fan per %RH of deficit)",

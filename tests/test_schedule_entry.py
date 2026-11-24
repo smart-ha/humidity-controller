@@ -1,7 +1,12 @@
 import datetime
 
-from humidity_controller.const import METHOD_ONOFF, METHOD_SETPOINT
-from humidity_controller.entry import default_entry_data, sync_device_config
+from humidity_controller.const import METHOD_ONOFF, METHOD_SETPOINT, METHOD_SPEED
+from humidity_controller.entry import (
+    default_entry_data,
+    migrate_to_speed,
+    pick_speed_entity,
+    sync_device_config,
+)
 from humidity_controller.schedule import coerce_points, target_at, validate_time
 
 
@@ -55,11 +60,49 @@ def test_default_entry_data_has_presets():
 
 
 def test_sync_device_config_keeps_survivors():
-    prev = {"humidifier.a": {"method": "speed", "speed_entity": "number.a"}}
+    prev = {"humidifier.a": {"method": "setpoint", "speed_entity": "number.a"}}
     out = sync_device_config(["humidifier.a", "humidifier.b", "switch.c"], prev)
-    assert out["humidifier.a"]["method"] == "speed"
+    assert out["humidifier.a"]["method"] == METHOD_SETPOINT
     assert out["humidifier.a"]["speed_entity"] == "number.a"
     assert out["humidifier.a"]["max_delta"] > 0  # defaults filled in
-    assert out["humidifier.b"]["method"] == METHOD_SETPOINT
+    assert out["humidifier.b"]["method"] == METHOD_SPEED  # new default
+    assert out["humidifier.b"]["speed_entity"] is None  # found at runtime
     assert out["switch.c"] == {"method": METHOD_ONOFF}
     assert set(out) == {"humidifier.a", "humidifier.b", "switch.c"}
+
+
+def test_pick_speed_entity():
+    airmx = [
+        "humidifier.a3s_v2_1",
+        "number.a3s_v2_1_fan_speed",
+        "sensor.a3s_v2_1_humidity",
+        "switch.a3s_v2_1_ionization",
+    ]
+    assert pick_speed_entity(airmx) == "number.a3s_v2_1_fan_speed"
+    assert pick_speed_entity(["number.x_target", "number.x_motor_speed"]) == "number.x_motor_speed"
+    assert pick_speed_entity(["humidifier.x", "number.x_level"]) == "number.x_level"
+    assert pick_speed_entity(["number.x_a", "number.x_b"]) is None  # ambiguous
+    assert pick_speed_entity(["humidifier.x", "sensor.x_speed"]) is None
+    assert pick_speed_entity([]) is None
+
+
+def test_migrate_to_speed_moves_only_setpoint_humidifiers():
+    data = {
+        "name": "base",
+        "device_config": {
+            "humidifier.a": {"method": "setpoint", "speed_entity": None, "kp": 7.0},
+            "humidifier.b": {"method": "onoff"},
+            "humidifier.c": {"method": "speed", "speed_entity": "number.c"},
+            "switch.d": {"method": "onoff"},
+        },
+    }
+    out = migrate_to_speed(data)
+    assert out["name"] == "base"
+    assert out["device_config"]["humidifier.a"] == {
+        "method": "speed", "speed_entity": None, "kp": 7.0,
+    }
+    assert out["device_config"]["humidifier.b"] == {"method": "onoff"}
+    assert out["device_config"]["humidifier.c"]["speed_entity"] == "number.c"
+    assert out["device_config"]["switch.d"] == {"method": "onoff"}
+    assert data["device_config"]["humidifier.a"]["method"] == "setpoint"  # input untouched
+    assert migrate_to_speed({})["device_config"] == {}

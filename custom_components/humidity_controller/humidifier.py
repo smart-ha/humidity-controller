@@ -61,6 +61,7 @@ from .control import (
     quantize,
     speed_changed,
 )
+from .devices import find_speed_entity
 from .schedule import target_at
 
 _LOGGER = logging.getLogger(__name__)
@@ -408,7 +409,7 @@ class HumidityControllerEntity(HumidifierEntity, RestoreEntity):
                 return METHOD_ONOFF
             return METHOD_SETPOINT
         if method == METHOD_SPEED:
-            speed_entity = device.config.get("speed_entity")
+            speed_entity = self._speed_entity(device)
             if (
                 not speed_entity
                 or not _usable(self.hass.states.get(speed_entity))
@@ -418,6 +419,12 @@ class HumidityControllerEntity(HumidifierEntity, RestoreEntity):
                 return METHOD_ONOFF
             return METHOD_SPEED
         return METHOD_ONOFF
+
+    def _speed_entity(self, device: _Device) -> str | None:
+        """Configured speed entity, else the device's own fan speed number."""
+        return device.config.get("speed_entity") or find_speed_entity(
+            self.hass, device.entity_id
+        )
 
     async def _drive(self, device: _Device, measured: float, now: float) -> bool:
         """Drive one device for this tick. Returns "is it humidifying"."""
@@ -516,7 +523,7 @@ class HumidityControllerEntity(HumidifierEntity, RestoreEntity):
 
         dt_s = TICK_INTERVAL_SECONDS if device.last_eval is None else max(now - device.last_eval, 0.0)
         raw = device.speed.update(measured, self._target, dt_s)
-        speed_entity = cfg["speed_entity"]
+        speed_entity = self._speed_entity(device)
         speed_state = self.hass.states.get(speed_entity)
         attrs = speed_state.attributes
         entity_min = _float(attrs.get("min"))
@@ -535,6 +542,7 @@ class HumidityControllerEntity(HumidifierEntity, RestoreEntity):
             "method": METHOD_SPEED,
             "running": True,
             "speed": speed,
+            "speed_entity": speed_entity,
         }
 
     async def _drive_failsafe(self, device: _Device) -> bool:

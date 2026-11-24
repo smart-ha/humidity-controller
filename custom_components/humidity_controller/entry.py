@@ -21,6 +21,8 @@ from .const import (
     DEFAULT_SPEED_MAX,
     DEFAULT_SPEED_MIN,
     METHOD_ONOFF,
+    METHOD_SETPOINT,
+    METHOD_SPEED,
 )
 
 
@@ -55,6 +57,40 @@ def default_device_config(entity_id: str) -> dict:
         "kp": DEFAULT_KP,
         "ki": DEFAULT_KI,
     }
+
+
+def pick_speed_entity(candidates: list[str]) -> str | None:
+    """Fan speed entity among the ``number.*`` entities of one device.
+
+    airmx names it ``number.<device>_fan_speed``; anything with "speed" in
+    the id comes next, and a lone number entity is taken as is.
+    """
+    numbers = sorted(c for c in candidates if c.split(".", 1)[0] == "number")
+    for match in (
+        lambda c: c.endswith("_fan_speed"),
+        lambda c: "speed" in c,
+    ):
+        found = [c for c in numbers if match(c)]
+        if found:
+            return found[0]
+    return numbers[0] if len(numbers) == 1 else None
+
+
+def migrate_to_speed(data: dict) -> dict:
+    """Entry minor version 1 → 2: setpoint was the default, speed is now.
+
+    Every humidifier on ``setpoint`` is moved to ``speed`` (its speed entity
+    is found at runtime when none is set); other settings stay.
+    """
+    out = dict(data)
+    config = {}
+    for entity_id, cfg in (data.get("device_config") or {}).items():
+        cfg = dict(cfg or {})
+        if entity_id.split(".", 1)[0] == "humidifier" and cfg.get("method") == METHOD_SETPOINT:
+            cfg["method"] = METHOD_SPEED
+        config[entity_id] = cfg
+    out["device_config"] = config
+    return out
 
 
 def sync_device_config(devices: list[str], previous: dict) -> dict:

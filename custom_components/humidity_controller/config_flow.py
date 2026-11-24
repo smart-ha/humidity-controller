@@ -25,6 +25,7 @@ from .const import (
     DEFAULT_SPEED_MIN,
     DEFAULT_TARGET_HUMIDITY,
     DOMAIN,
+    ENTRY_MINOR_VERSION,
     FAILSAFE_ACTIONS,
     HUMIDIFIER_METHODS,
     HUMIDITY_AGGREGATIONS,
@@ -32,6 +33,7 @@ from .const import (
     MIN_HUMIDITY,
     PRESET_NONE,
 )
+from .devices import find_speed_entity
 from .entry import default_entry_data, sync_device_config
 from .schedule import VALUE_KEY, coerce_points, validate_time
 
@@ -125,6 +127,7 @@ class HumidityControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Initial setup: name, sensors and devices. Everything else in options."""
 
     VERSION = 1
+    MINOR_VERSION = ENTRY_MINOR_VERSION
 
     async def async_step_user(self, user_input=None):
         if user_input is not None:
@@ -383,7 +386,10 @@ class HumidityControllerOptionsFlow(config_entries.OptionsFlow):
                 ): _number(0, 40, 1, "%"),
                 vol.Optional(
                     "speed_entity",
-                    description={"suggested_value": cfg.get("speed_entity")},
+                    description={
+                        "suggested_value": cfg.get("speed_entity")
+                        or find_speed_entity(self.hass, self._device)
+                    },
                 ): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain=["number", "input_number"])
                 ),
